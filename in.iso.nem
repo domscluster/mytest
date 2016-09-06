@@ -1,0 +1,59 @@
+
+ units lj
+
+ atom_style  ellipsoid
+ dimension   3
+
+ lattice fcc 0.3
+
+ region  box block 0 6 0 6 0 6
+
+ create_box 1 box
+
+ create_atoms 1 box
+
+ set     type 1 mass 1.0
+ set     type 1 shape 3 1 1
+# set group all quat/random 18238
+ set     group all quat 1 0 0 0
+
+ compute  rot all temp/asphere
+
+ group      spheroid type 1
+
+ variable     dof equal count(spheroid)+2
+
+ compute_modify rot extra ${dof}
+
+
+ velocity all create 2.0 87287 loop geom
+
+
+ pair_style gayberne 1.0 1.0 2.0 4.0
+
+ pair_coeff  1 1 1.0 1.0 0.2 1.0 1.0 0.2 1.0 1.0
+
+ neighbor 0.8 bin
+ thermo 100
+ compute     q all property/atom quatw quati quatj quatk
+ compute shape all property/atom shapex shapey shapez
+ dump     1 all custom 100 test2.IN.gayberne &
+      id type x y z c_q[1] c_q[2] c_q[3] c_q[4] &
+      c_shape[1] c_shape[2] c_shape[3]
+
+ timestep 0.001
+
+ thermo_style custom step temp etotal vol epair press pe
+
+
+
+
+
+# fix  1 all nvt/asphere temp 0.5  0.5 0.05
+fix         1 all npt/asphere temp 1.3 1.3 1.3 iso 25.0 25.0 1.0
+#             mtk  pchain 1 tchain 1
+
+ compute_modify 1_temp extra ${dof}
+
+run 500000
+
